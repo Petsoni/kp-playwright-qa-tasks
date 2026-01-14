@@ -1,40 +1,33 @@
 import {expect, test} from "@playwright/test";
+import {CategoryPage} from "../pages/category-page";
 
 const categoryForTesting = "Odeća | Ženska";
+const BASE_URL = "https://kupujemprodajem.com/" as const;
 
-// test.describe(`Testing for category ${categoryForTesting}`, () => {
-//
-//   test.use({categoryName: categoryForTesting});
-//
-//   test("Go to desired category page", async ({page, categoryName}) => {
-//     console.log(`Currently on page ${category}`);
-//   })
-// })
+/**
+ * @description
+ * Pretraga po sledećim kriterijumima (kategorija “Odeća | Ženska”, grupa “Bluze”, cena od
+ * 100 din, samo sa cenom, stanje “Novo” i “Kao novo (ne korišćeno)”) treba ustanoviti da
+ * imamo više od 1000 rezultata za ovakvu pretragu.
+ */
+test("", async ({page}) => {
+    const categoryPage = new CategoryPage(page);
 
-test('Pretraga ženskih bluza sa specifičnim filterima treba da vrati preko 1000 rezultata', async ({page}) => {
-    await page.goto('https://www.kupujemprodajem.com/');
+    await categoryPage.goToPath(BASE_URL)
 
-    const acceptCookies = page.getByRole('button', {name: 'Prihvatam'});
-    if (await acceptCookies.isVisible()) {
-      await acceptCookies.click();
-    }
+    await categoryPage.acceptCookies();
+    await page.getByLabel(categoryForTesting).click();
 
-    // Click the category in sidebar
-    const categoryLink = page.getByLabel(categoryForTesting);
-    await categoryLink.waitFor({state: 'visible', timeout: 5000});
-    await categoryLink.click({force: true});
+    await categoryPage.selectSubcategory("Bluze")
 
-    await page.getByLabel('Bluze').first().click();
+    await categoryPage.filters.setPriceFrom(100)
+    await categoryPage.filters.selectCurrencyRSD();
+    await categoryPage.filters.selectCondition("Novo")
+    await categoryPage.filters.selectCondition("Nekorišćeno (polovno)")
+    await categoryPage.filters.applyFilters();
 
-    await page.locator('input[name="priceFrom"]').fill('100');
-    await page.getByRole("radio", {name: "rsd"}).check();
-
-    await page.locator('label').filter({hasText: 'Novo'}).click();
-    await page.locator('label').filter({hasText: 'Nekorišćeno (polovno)'}).click();
-
-    await page.locator('label').filter({hasText: 'Samo sa cenom'}).click();
-
-    await page.getByRole('button', {name: 'Pretraži', exact: true}).click();
-
+    const numberOfPosts = await categoryPage.getResultsCount();
+    console.log(`Current number of posts: ${numberOfPosts}`);
+    expect(numberOfPosts).toBeGreaterThanOrEqual(1000);
   }
 );
