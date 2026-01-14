@@ -13,6 +13,10 @@ export class BasePage {
     await this.page.goto(path);
   }
 
+  async goToProduct(productSelector: string) {
+    await this.page.locator(productSelector).first().click();
+  }
+
   async acceptCookies() {
     if (await this.acceptCookiesButton.isVisible()) {
       await this.acceptCookiesButton.click();

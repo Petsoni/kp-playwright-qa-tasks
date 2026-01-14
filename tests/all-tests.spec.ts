@@ -1,5 +1,6 @@
 import {expect, test} from "@playwright/test";
 import {CategoryPage} from "../pages/category-page";
+import {ProductPage} from "../pages/product-page";
 
 const categoryForTesting = "Odeća | Ženska";
 const BASE_URL = "https://kupujemprodajem.com/" as const;
@@ -10,7 +11,7 @@ const BASE_URL = "https://kupujemprodajem.com/" as const;
  * 100 din, samo sa cenom, stanje “Novo” i “Kao novo (ne korišćeno)”) treba ustanoviti da
  * imamo više od 1000 rezultata za ovakvu pretragu.
  */
-test("", async ({page}) => {
+test("Task 1", async ({page}) => {
     const categoryPage = new CategoryPage(page);
 
     await categoryPage.goToPath(BASE_URL)
@@ -29,5 +30,25 @@ test("", async ({page}) => {
     const numberOfPosts = await categoryPage.getResultsCount();
     console.log(`Current number of posts: ${numberOfPosts}`);
     expect(numberOfPosts).toBeGreaterThanOrEqual(1000);
+  }
+);
+
+/**
+ * @description
+ * Iz otvorenog oglasa kada probamo da dodamo u Adresar da nam se traži forma za login.
+ */
+test("Task 2", async ({page}) => {
+    const productPage = new ProductPage(page);
+
+    await productPage.goToPath(BASE_URL)
+    await productPage.acceptCookies();
+
+    await productPage.goToProduct('.AdItemCard_container__UcY89');
+
+    await productPage.addToContactList();
+
+    const loginModal = page.locator("div[class*='LoginModal_modal']");
+    await expect(loginModal).toContainText("Ulogujte se");
+    await expect(loginModal, {message: "Login modal should be visible when clicking add"}).toBeVisible();
   }
 );
