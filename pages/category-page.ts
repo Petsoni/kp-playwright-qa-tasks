@@ -19,7 +19,7 @@ export class CategoryPage extends BasePage {
   }
 
   async getResultsCount(): Promise<number> {
-    const text = await this.breadcrumbBox.getByText("oglasa").innerText();
+    const text = await this.breadcrumbBox.getByText(/oglas/).innerText();
     return this.parseNumber(text);
   }
 }

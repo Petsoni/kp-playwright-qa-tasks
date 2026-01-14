@@ -14,4 +14,8 @@ export class ProductPage extends BasePage {
   async addToContactList() {
     await this.addToContactListButton.click();
   }
+
+  async isAddToContactVisible() {
+    return await this.addToContactListButton.isVisible({ timeout: 2000 }).catch(() => false);
+  }
 }

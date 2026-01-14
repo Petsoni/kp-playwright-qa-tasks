@@ -1,9 +1,4 @@
-import {expect, test} from "@playwright/test";
-import {CategoryPage} from "../pages/category-page";
-import {ProductPage} from "../pages/product-page";
-
-const categoryForTesting = "Odeća | Ženska";
-const BASE_URL = "https://kupujemprodajem.com/" as const;
+import {expect, test} from "../fixtures/page-objects";
 
 /**
  * @description
@@ -11,13 +6,8 @@ const BASE_URL = "https://kupujemprodajem.com/" as const;
  * 100 din, samo sa cenom, stanje “Novo” i “Kao novo (ne korišćeno)”) treba ustanoviti da
  * imamo više od 1000 rezultata za ovakvu pretragu.
  */
-test("Task 1", async ({page}) => {
-    const categoryPage = new CategoryPage(page);
-
-    await categoryPage.goToPath(BASE_URL)
-
-    await categoryPage.acceptCookies();
-    await page.getByLabel(categoryForTesting).click();
+test("Task 1", async ({categoryPage, page}) => {
+    await page.getByLabel("Odeća | Ženska").click();
 
     await categoryPage.selectSubcategory("Bluze")
 
@@ -37,18 +27,53 @@ test("Task 1", async ({page}) => {
  * @description
  * Iz otvorenog oglasa kada probamo da dodamo u Adresar da nam se traži forma za login.
  */
-test("Task 2", async ({page}) => {
-    const productPage = new ProductPage(page);
-
-    await productPage.goToPath(BASE_URL)
-    await productPage.acceptCookies();
-
-    await productPage.goToProduct('.AdItemCard_container__UcY89');
+test("Task 2", async ({productPage, page}) => {
+    await productPage.goToProduct(".AdItemCard_container__UcY89");
 
     await productPage.addToContactList();
 
-    const loginModal = page.locator("div[class*='LoginModal_modal']");
-    await expect(loginModal).toContainText("Ulogujte se");
+    const loginModal = page.locator(".LoginModal_modal__FxuKf");
     await expect(loginModal, {message: "Login modal should be visible when clicking add"}).toBeVisible();
+    await expect(loginModal).toContainText("Ulogujte se");
+  }
+);
+
+/**
+ * @description
+ * Iz otvorenog oglasa kada probamo da dodamo u Adresar da nam se traži forma za login.
+ * Ako za određeni oglas ne postoji dugme za dodavanje u adresar, naći sledeći oglas koji ima to dugme
+ */
+test("Task 2 with ad checking for 'Dodaj u adresar' button", async ({productPage, page}) => {
+    let adPostWithContactInformationFound = false;
+
+    for (let i = 0; i < 5; i++) {
+      const currentCard = page.locator(".AdItemCard_container__UcY89").nth(i);
+
+      await currentCard.click();
+
+      if (await productPage.isAddToContactVisible()) {
+        await productPage.addToContactList();
+        adPostWithContactInformationFound = true;
+        return;
+      } else {
+        console.log(`Ad ${i + 1} lacks the button 'Dodajte u adresar'. Going back...`);
+        await page.goBack();
+
+        await page.waitForURL('**/');
+        await page.locator(".AdItemCard_container__UcY89").first().waitFor({state: 'visible'});
+      }
+
+    }
+
+
+    if (adPostWithContactInformationFound) {
+      const loginModal = page.locator(".LoginModal_modal__FxuKf");
+      await expect(loginModal, {message: "Login modal should be visible when clicking add"}).toBeVisible();
+      await expect(loginModal).toContainText("Ulogujte se");
+    } else {
+      expect(adPostWithContactInformationFound, "None of the ad items had 'Dodajte u adresar' button").toBe(true);
+    }
+
+
   }
 );

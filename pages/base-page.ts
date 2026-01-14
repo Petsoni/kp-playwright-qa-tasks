@@ -13,6 +13,14 @@ export class BasePage {
     await this.page.goto(path);
   }
 
+  async goBack() {
+    await this.page.goBack({waitUntil: "domcontentloaded"});
+  }
+
+  getAdCards(): Locator {
+    return this.page.locator(".AdItemCard_container__UcY89");
+  }
+
   async goToProduct(productSelector: string) {
     await this.page.locator(productSelector).first().click();
   }
